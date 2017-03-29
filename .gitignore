@@ -1,0 +1,12 @@
+# Boo eclipse! - every eclipse project needs its own .gitignore file
+*.iml
+# Ignore Eclipse
+/.checkstyle
+/.project
+/.classpath
+/.settings/
+/bin/
+
+# Ignore gradle
+/build/
+build.gradle

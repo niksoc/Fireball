@@ -1,0 +1,19 @@
+{
+    "name": "Fireball:fireball",
+    "parent": "engine:iconItem",
+    "DisplayName": {
+        "name": "Fireball"
+    },
+    "Item": {
+        "icon": "Fireball:Fireball",
+        "damageType": "Fireball:fireballDmg",
+        "usage": "IN_DIRECTION",
+        "consumedOnUse": false
+    },
+    "Health": {
+        "maxHealth": 20,
+        "regenRate": -1,
+        "destroyEntityOnNoHealth": true
+    },
+    "ProjectileAction": {}
+}

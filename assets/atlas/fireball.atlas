@@ -1,0 +1,11 @@
+{
+  "texture" : "Fireball:Fireball",
+  "textureSize" : [16, 16],
+  "grid" : {
+    "tileSize" : [16, 16],
+    "gridDimensions" : [1, 3],
+    "tileNames" : [
+      "fireballTile"
+    ]
+  }
+}

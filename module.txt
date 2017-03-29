@@ -1,0 +1,9 @@
+{
+    "id": "Fireball",
+    "version": "1.0.0",
+    "author": "niksoc",
+    "displayName": "Fireball",
+    "description": "Adds a Fireball item that can be casted",
+    "dependencies": [],
+    "serverSideOnly": false
+}
