@@ -8,12 +8,13 @@
         "icon": "Fireball:Fireball",
         "damageType": "Fireball:fireballDmg",
         "usage": "IN_DIRECTION",
-        "consumedOnUse": false
+        "consumedOnUse":false
     },
     "Health": {
-        "maxHealth": 20,
-        "regenRate": -1,
-        "destroyEntityOnNoHealth": true
+        "maxHealth": 100,
+        "currentHealth": 100,
+        "destroyEntityOnNoHealth": false
     },
+    "Light": {},
     "ProjectileAction": {}
 }

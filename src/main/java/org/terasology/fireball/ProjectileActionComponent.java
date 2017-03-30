@@ -32,12 +32,12 @@ public class ProjectileActionComponent implements Component{
     /**
      * The distance travelled by the projectile.
      */
-    public int distanceTravelled = 0;
+    public float distanceTravelled = 0;
 
     /**
      * The velocity of the projectile.
      */
-    public int velocity = 2;
+    public int velocity = 7;
 
     /**
      * The max distance the projectile will fly.

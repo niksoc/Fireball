@@ -15,6 +15,7 @@
  */
 package org.terasology.fireball;
 
+import com.bulletphysics.collision.narrowphase.GjkEpaSolver;
 import org.terasology.engine.Time;
 import org.terasology.entitySystem.entity.EntityManager;
 import org.terasology.entitySystem.entity.EntityRef;
@@ -26,6 +27,8 @@ import org.terasology.entitySystem.systems.UpdateSubscriberSystem;
 import org.terasology.logic.common.ActivateEvent;
 import org.terasology.logic.health.DoDamageEvent;
 import org.terasology.logic.health.HealthComponent;
+import org.terasology.logic.inventory.InventoryManager;
+import org.terasology.logic.inventory.InventoryUtils;
 import org.terasology.logic.location.LocationComponent;
 import org.terasology.math.geom.Vector3f;
 import org.terasology.physics.CollisionGroup;
@@ -42,13 +45,10 @@ import org.terasology.world.WorldProvider;
 @RegisterSystem(RegisterMode.AUTHORITY)
 public class ProjectileAuthoritySystem extends BaseComponentSystem implements UpdateSubscriberSystem {
     @In
-    private WorldProvider worldProvider;
+    private InventoryManager inventoryManager;
 
     @In
     private Physics physicsRenderer;
-
-    @In
-    private BlockEntityRegistry blockEntityRegistry;
 
     @In
     private EntityManager entityManager;
@@ -71,15 +71,27 @@ public class ProjectileAuthoritySystem extends BaseComponentSystem implements Up
     public void onActivate(ActivateEvent event, EntityRef entity, ProjectileActionComponent projectileActionComponent) {
 
         if (time.getGameTime() > lastTime + 1.0f / projectileActionComponent.projectilesPerSecond) {
-            //projectileActionComponent.position  = new Vector3f(event.getOrigin());
+            int slot = InventoryUtils.getSlotWithItem(event.getInstigator(), entity);
+            inventoryManager.removeItem(event.getInstigator(), event.getInstigator(), slot, false, 1);
             projectileActionComponent.direction = new Vector3f(event.getDirection());
 
             entity.addOrSaveComponent(new LocationComponent(event.getOrigin()));
-
             entity.saveComponent(projectileActionComponent);
-            Vector3f a = entity.getComponent(ProjectileActionComponent.class).direction;
+
             lastTime = time.getGameTime();
         }
+    }
+
+    private void damageEntityWithHealth(EntityRef blockEntity, EntityRef entity) {
+        ProjectileActionComponent projectile = entity.getComponent(ProjectileActionComponent.class);
+        HealthComponent health = entity.getComponent(HealthComponent.class);
+        int oldBlockHealth = blockEntity.getComponent(HealthComponent.class).currentHealth;
+        blockEntity.send(new DoDamageEvent(health.currentHealth, projectile.damageType));
+        int newBlockHealth = 0;
+        if(blockEntity.exists())
+            newBlockHealth = blockEntity.getComponent(HealthComponent.class).currentHealth;
+        // inflict same amount of damage on fireball as on the target
+        entity.send(new DoDamageEvent(oldBlockHealth - newBlockHealth, projectile.damageType));
     }
 
     /*
@@ -91,27 +103,41 @@ public class ProjectileAuthoritySystem extends BaseComponentSystem implements Up
             ProjectileActionComponent projectile = entity.getComponent(ProjectileActionComponent.class);
             if(projectile.direction == null) // not been fired
                 continue;
-            if(projectile.distanceTravelled >= projectile.maxDistance) {
+
+            HealthComponent health = entity.getComponent(HealthComponent.class);
+            if(projectile.distanceTravelled >= projectile.maxDistance ||
+                    health.currentHealth <= 0) {
                 entity.destroy();
                 continue;
             }
-            HealthComponent health = entity.getComponent(HealthComponent.class);
+
             Vector3f position = entity.getComponent(LocationComponent.class).getWorldPosition();
 
             float displacement = delta * projectile.velocity;
             HitResult result;
             result = physicsRenderer.rayTrace(position, projectile.direction, displacement, filter);
+
             if(result.isHit()) {
                 EntityRef blockEntity = result.getEntity();
-                blockEntity.send(new DoDamageEvent(projectile.damageAmount, projectile.damageType));
-                entity.destroy();
-                continue;
+                if(!blockEntity.hasComponent(HealthComponent.class)){
+                    // a hack to induce a HealthComponent in the blockEntity
+                    blockEntity.send(new DoDamageEvent(0, projectile.damageType));
+                    if(!blockEntity.hasComponent(HealthComponent.class)) {
+                        // if it still doesn't have a heath component, it's indestructible
+                        // so destroy our fireball
+                        entity.destroy();
+                        continue;
+                    }
+                }
+                damageEntityWithHealth(blockEntity, entity);
             }
 
-            Vector3f newPosition = position.add(projectile.direction.mul(displacement));
+            Vector3f direction = new Vector3f(projectile.direction);
+            position.add(direction.mul(displacement));
 
             projectile.distanceTravelled += displacement;
-            entity.addOrSaveComponent(new LocationComponent(newPosition));
+            entity.addOrSaveComponent(new LocationComponent(position));
+            entity.addOrSaveComponent(projectile);
         }
 
     }
