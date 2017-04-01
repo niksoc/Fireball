@@ -4,6 +4,11 @@
     "author": "niksoc",
     "displayName": "Fireball",
     "description": "Adds a Fireball item that can be casted",
-    "dependencies": [],
+    "dependencies": [
+        {
+            "id" : "Core",
+            "minVersion" : "1.0.0"
+        }
+     ],
     "serverSideOnly": false
 }
